@@ -2990,8 +2990,11 @@ class RobertaTokenizer(GPT2Tokenizer):
             add_prefix_space = kwargs["add_prefix_space"]
         else:
             add_prefix_space = add_special_tokens
-        if add_prefix_space and not text[0].isspace():
-            text = " " + text
+        if len(text) > 0:
+            if add_prefix_space and not text[0].isspace():
+                text = " " + text
+        else:
+            text = " "
         return text
 
 

@@ -111,22 +111,31 @@ def main():
     doc_embeddings = np.memmap(args.doc_embed_path, 
         dtype=np.float32, mode="r")
     doc_embeddings = doc_embeddings.reshape(-1, embed_size)
+    print(len(doc_embeddings))
 
     save_index_path = os.path.join(args.output_dir, f"OPQ{args.subvector_num},IVF1,PQ{args.subvector_num}x8.index")
     res = faiss.StandardGpuResources()
+    
     res.setTempMemory(1024*1024*512)
     co = faiss.GpuClonerOptions()
     co.useFloat16 = args.subvector_num >= 56
+    co.verbose = True
 
-    faiss.omp_set_num_threads(32)
+    # faiss.omp_set_num_threads(6)
     dim = embed_size
     index = faiss.index_factory(dim, 
         f"OPQ{args.subvector_num},IVF1,PQ{args.subvector_num}x8", faiss.METRIC_INNER_PRODUCT)
     index.verbose = True
     index = faiss.index_cpu_to_gpu(res, 0, index, co)    
+    logger.info("Starting to train faiss index on document embeddings!")
+    assert not index.is_trained
     index.train(doc_embeddings)
+    logger.info("Starting to index document embeddings!")
+    assert index.is_trained
     index.add(doc_embeddings)
+    logger.info("Converting indexes from GPU to CPU!")
     index = faiss.index_gpu_to_cpu(index)
+    logger.info("Saving index to CPU memory!")
     faiss.write_index(index, save_index_path)
 
 

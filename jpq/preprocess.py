@@ -285,36 +285,37 @@ def preprocess(args):
             args,
             pid2offset,
             "train-qid2offset.pickle",
-            "queries.train.tsv",
+            "queries.tsv",
             "qrels.train.tsv",
             "train-query",
             "train-qrel.tsv")
         
-        write_query_rel(
-            args,
-            pid2offset,
-            "dev-qid2offset.pickle",
-            "queries.dev.small.tsv",
-            "qrels.dev.small.tsv",
-            "dev-query",
-            "dev-qrel.tsv")
+        # write_query_rel(
+        #     args,
+        #     pid2offset,
+        #     "dev-qid2offset.pickle",
+        #     "queries.dev.small.tsv",
+        #     "qrels.dev.small.tsv",
+        #     "dev-query",
+        #     "dev-qrel.tsv")
     
-        write_query_rel(
-            args,
-            pid2offset,
-            "test-qid2offset.pickle",
-            "msmarco-test2019-queries.tsv",
-            "2019qrels-pass.txt",
-            "test-query",
-            "test-qrel.tsv")
-        write_query_rel(
-            args,
-            pid2offset,
-            "lead-qid2offset.pickle",
-            "queries.eval.small.tsv",
-            None,
-            "lead-query",
-            None)
+        # write_query_rel(
+        #     args,
+        #     pid2offset,
+        #     "test-qid2offset.pickle",
+        #     "msmarco-test2019-queries.tsv",
+        #     "2019qrels-pass.txt",
+        #     "test-query",
+        #     "test-qrel.tsv")
+        
+        # write_query_rel(
+        #     args,
+        #     pid2offset,
+        #     "lead-qid2offset.pickle",
+        #     "queries.tsv",
+        #     None,
+        #     "lead-query",
+        #     None)
 
 
 def PassagePreprocessingFn(args, line, tokenizer):
@@ -334,9 +335,8 @@ def PassagePreprocessingFn(args, line, tokenizer):
     else:
         line = line.strip()
         line_arr = line.split('\t')
-        p_id = int(line_arr[0])
-
-        p_text = line_arr[1].rstrip()
+        p_id = line_arr[0]
+        p_text = line_arr[1].rstrip() if len(line_arr) > 1 else " "
         # keep only first 10000 characters, should be sufficient for any
         # experiment that uses less than 500 - 1k tokens
         full_text = p_text[:args.max_doc_character]
@@ -379,7 +379,7 @@ def get_arguments():
     )
     parser.add_argument(
         "--max_query_length",
-        default=64,
+        default=128,
         type=int,
         help="The maximum total input sequence length after tokenization. Sequences longer "
         "than this will be truncated, sequences shorter will be padded.",
@@ -396,6 +396,17 @@ def get_arguments():
         type=int,
         help="0 for doc, 1 for passage",
     )
+    parser.add_argument(
+        "--data_dir",
+        type=str,
+        help="local data dir",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        help="dataset",
+    )
+
     parser.add_argument("--threads", type=int, default=32)
 
     args = parser.parse_args()
@@ -409,8 +420,8 @@ def main():
         args.data_dir = "./data/doc/dataset"
         args.out_data_dir = "./data/doc/preprocess"
     else:
-        args.data_dir = "./data/passage/dataset"
-        args.out_data_dir = "./data/passage/preprocess"
+        args.data_dir = args.data_dir
+        args.out_data_dir = f"/home/ukp/thakur/projects/JPQ/preprocess/{args.dataset}"
 
     if not os.path.exists(args.out_data_dir):
         os.makedirs(args.out_data_dir)

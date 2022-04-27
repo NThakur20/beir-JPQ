@@ -213,6 +213,7 @@ class DenseRetrievalJPQSearch:
           
         logger.info("Sorting Corpus by document length (Longest first)...")
         corpus_ids = sorted(corpus, key=lambda k: len(corpus[k].get("title", "") + corpus[k].get("text", "")), reverse=True)
+        # corpus_ids = list(corpus)
         corpus = [corpus[cid] for cid in corpus_ids]
 
         if self.corpus_index is None:
